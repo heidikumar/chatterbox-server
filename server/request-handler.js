@@ -11,7 +11,10 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var fs = require('fs');
+var fileName = '/Users/student/Desktop/2015-08-chatterbox-server/server/logs.txt';
 
+var messages = [];
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -71,15 +74,19 @@ var requestHandler = function(request, response) {
     request.on('data', function(data){
       message += data.toString();
     });
+
+
     request.on('end', function(){
       // console.log(messages);
       message = JSON.parse(message);
       messages.unshift(message);
-      // console.log(messages);
+      fs.writeFile(fileName, JSON.stringify(messages), 'utf8', function(err){
+        console.log(err); 
+      })
       response.writeHead(statusCode, headers);
       response.end(JSON.stringify({"results":messages}));
     });
-    console.log("message: ");
+    // console.log("message: ");
     
   } else if (request.method === "PUT") {
     statusCode = 201 
@@ -106,7 +113,14 @@ var requestHandler = function(request, response) {
   //will store objects that are messages (each one)
 };
 
-messages = []
+
+
+//fs.open(fileName,'r', function(err, status){});
+var data = fs.readFileSync(fileName, "utf8", function(err, data){
+  //console.log('messages: ' + messages);
+});
+messages = JSON.parse(data);
+
 var urls = {
   '/classes/room1': [],
   '/classes/room': [], 
