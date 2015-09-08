@@ -12,6 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -33,12 +34,14 @@ var requestHandler = function(request, response) {
   console.log("Serving request type " + request.method + " for url " + request.url);
 
 
+  var url = require('url');
+  var path = url.parse(request.url).pathname;
+
   //https://api.parse.com/1/classes/chatterbox/ <- note to self: current chatterbox server
   var statusCode = 200;
   // The outgoing status.
   //var messages = [];
 
-  // console.log(request);
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
 
@@ -46,22 +49,23 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "JSON";
+  headers['Content-Type'] = "application/json";
 
   if (request.method === "GET"){
     var sendBackToClient;
-    if (messages.hasOwnProperty(request.url)){
+    if (true){                      //letting everyone in for now
       statusCode = 200;
-      sendBackToClient = JSON.stringify({"results":messages[request.url]});
+      sendBackToClient = JSON.stringify({"results":messages});
     } else {
       statusCode = 404;
     }
       response.writeHead(statusCode, headers);
       response.end(sendBackToClient);
   } else if (request.method === "POST") {
-    if (!messages.hasOwnProperty(request.url)){
-      messages[request.url] = [];
-    }
+    console.log('is this triggering?');
+    // if (!messages.hasOwnProperty(request.url)){ //this is archaic but doesn't matter for now
+    //   messages = [];
+    // }
     statusCode = 201;
     var message = "";
     request.on('data', function(data){
@@ -70,17 +74,20 @@ var requestHandler = function(request, response) {
     request.on('end', function(){
       // console.log(messages);
       message = JSON.parse(message);
-      messages[request.url].push(message);
+      messages.unshift(message);
       // console.log(messages);
       response.writeHead(statusCode, headers);
-      response.end(JSON.stringify({"results":messages[request.url]}));
+      response.end(JSON.stringify({"results":messages}));
     });
+    console.log("message: ");
     
   } else if (request.method === "PUT") {
-    statusCode = 201 } else if (request.method === "DELETE") {
+    statusCode = 201 
+  } else if (request.method === "DELETE") {
     statusCode = 201;
   } else if (request.method === "OPTIONS") {
-    statusCode = 201;
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(headers));
   }
 
   // .writeHead() writes to the request line and headers of the response,
@@ -99,6 +106,16 @@ var requestHandler = function(request, response) {
   //will store objects that are messages (each one)
 };
 
+messages = []
+var urls = {
+  '/classes/room1': [],
+  '/classes/room': [], 
+  '/classes/messages' :[],
+  'http://127.0.0.1:3000/classes/messages': [],
+  'http://127.0.0.1:3000/?order=-createdAt': []
+};
+
+
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
 // are on different domains, for instance, your chat client.
@@ -109,12 +126,6 @@ var requestHandler = function(request, response) {
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 
-var messages = {
-  '/classes/room1': [],
-  '/classes/room': [], 
-  '/classes/messages' :[],
-  'http://127.0.0.1:3000/classes/messages': []
-};
 
 var defaultCorsHeaders = {
   "access-control-allow-origin": "*",
