@@ -1,1 +1,1 @@
-[{"username":"Jono","text":"Do my bidding!","roomname":"lobby"},{"username":"JackSparrow","text":"Ahoy!","roomname":"lobby"},{"username":"Jono","message":"Do my bidding!","roomname":"lobby"}]
+[{"username":"JackSparrow","text":"Hvor er rummen??","roomname":"lobby"},{"username":"Jono","text":"Do my bidding!","roomname":"lobby"},{"username":"JackSparrow","text":"Ahoy!","roomname":"lobby"},{"username":"Jono","message":"Do my bidding!","roomname":"lobby"}]

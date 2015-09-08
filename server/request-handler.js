@@ -11,10 +11,63 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var express = require('express');
+var app = express();
+
 var fs = require('fs');
 var fileName = '/Users/student/Desktop/2015-08-chatterbox-server/server/logs.txt';
 
+
+var statusCode = 200;
+var defaultCorsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, accept",
+  "access-control-max-age": 10 // Seconds.
+};
+var headers = defaultCorsHeaders;
+// console.log(headers);
+headers['Content-Type'] = "application/json";
+
+
 var messages = [];
+
+var getHandler = function(request, response){
+  var sendBackToClient;
+    if (true){                      //letting everyone in for now
+      statusCode = 200;
+      sendBackToClient = JSON.stringify({"results":messages});
+    } else {
+      statusCode = 404;
+    }
+      response.writeHead(statusCode, headers);
+      //response.write(html)  //ALL HTML CONTENT ENDS UP IN HERE.
+      response.end(sendBackToClient);
+};
+var postHandler = function(request, response){
+  console.log('is this triggering?');
+  statusCode = 201;
+  var message = "";
+  request.on('data', function(data){
+    message += data.toString();
+  });
+
+
+  request.on('end', function(){
+    // console.log(messages);
+    message = JSON.parse(message);
+    messages.unshift(message);
+    fs.writeFile(fileName, JSON.stringify(messages), 'utf8', function(err){
+      console.log(err); 
+    })
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify({"results":messages}));
+  });
+};
+var optionsHandler = function(request, response){
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify(headers));
+}
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -41,18 +94,18 @@ var requestHandler = function(request, response) {
   var path = url.parse(request.url).pathname;
 
   //https://api.parse.com/1/classes/chatterbox/ <- note to self: current chatterbox server
-  var statusCode = 200;
+  // var statusCode = 200;
   // The outgoing status.
   //var messages = [];
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  // var headers = defaultCorsHeaders;
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "application/json";
+  // headers['Content-Type'] = "application/json";
 
   if (request.method === "GET"){
     var sendBackToClient;
@@ -63,6 +116,7 @@ var requestHandler = function(request, response) {
       statusCode = 404;
     }
       response.writeHead(statusCode, headers);
+      //response.write(html)  //ALL HTML CONTENT ENDS UP IN HERE.
       response.end(sendBackToClient);
   } else if (request.method === "POST") {
     console.log('is this triggering?');
@@ -141,11 +195,9 @@ var urls = {
 // client from this domain by setting up static file serving.
 
 
-var defaultCorsHeaders = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept",
-  "access-control-max-age": 10 // Seconds.
-};
+
 
 exports.requestHandler = requestHandler;
+exports.getHandler = getHandler;
+exports.postHandler = postHandler;
+exports.optionsHandler = optionsHandler;
